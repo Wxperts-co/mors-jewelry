@@ -103,7 +103,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
               Home
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-            <Link href="/" className="hover:text-neutral-900 transition-colors shrink-0">
+            <Link href="/products" className="hover:text-neutral-900 transition-colors shrink-0">
               Products
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
@@ -182,19 +182,13 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
               {product.title}
             </h1>
 
-            {/* Pricing Section */}
-            <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-neutral-100/80 border border-neutral-200/80 flex items-center justify-between">
-              <div className="flex items-baseline gap-2 sm:gap-3">
-                <span className="text-2xl sm:text-4xl font-black text-[#996515]">
-                  ${price}
-                </span>
-                <span className="text-xs sm:text-base text-neutral-400 line-through">
-                  ${originalPrice}
-                </span>
-              </div>
-
-              <span className="text-[10px] sm:text-xs font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full uppercase tracking-wider">
-                In Stock
+            {/* Stock / Availability Section */}
+            <div className="flex items-center gap-2 pt-0.5">
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-wider">
+                In Stock & Available
+              </span>
+              <span className="text-xs font-semibold text-neutral-500">
+                • 100% Certified Authentic
               </span>
             </div>
 
@@ -229,7 +223,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
                 className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-3.5 px-4 sm:px-6 rounded-xl sm:rounded-2xl bg-neutral-950 hover:bg-gradient-to-r hover:from-[#D4AF37] hover:to-[#B8860B] text-white hover:text-black font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 shadow-md hover:shadow-[0_4px_20px_rgba(212,175,55,0.4)] cursor-pointer"
               >
                 <ShoppingBag className="w-4 h-4" />
-                <span>Add to Bag (${(parseFloat(price) * selectedQty).toFixed(2)})</span>
+                <span>Add to Bag</span>
               </button>
             </div>
 
@@ -345,7 +339,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
                 </h2>
               </div>
               <Link
-                href="/"
+                href="/products"
                 className="text-xs sm:text-sm font-bold text-[#996515] hover:underline flex items-center gap-1"
               >
                 <span>View All</span>
@@ -372,13 +366,10 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
                         className="object-contain group-hover:scale-105 transition-transform duration-400"
                       />
                     </div>
-                    <div className="pt-2">
+                    <div className="pt-2 pb-0.5">
                       <h3 className="text-xs sm:text-sm font-bold text-neutral-800 line-clamp-1 group-hover:text-[#996515] transition-colors">
                         {rel.title}
                       </h3>
-                      <p className="text-sm font-extrabold text-[#996515] pt-0.5">
-                        ${relPrice}
-                      </p>
                     </div>
                   </Link>
                 );
@@ -392,9 +383,9 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
       {/* Mobile Sticky Bottom Action Bar for Ergonomic Shopping */}
       <div className="sm:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-neutral-200/90 p-3 z-40 flex items-center justify-between gap-3 shadow-[0_-8px_25px_rgba(0,0,0,0.08)]">
         <div className="flex flex-col">
-          <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">Total</span>
-          <span className="text-lg font-black text-[#996515] leading-tight">
-            ${(parseFloat(price) * selectedQty).toFixed(2)}
+          <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">Status</span>
+          <span className="text-xs font-bold text-emerald-700 leading-tight">
+            In Stock
           </span>
         </div>
 

@@ -10,7 +10,7 @@ export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const leftNavLinks = [
-    { label: 'PRODUCTS', href: '#' },
+    { label: 'PRODUCTS', href: '/products' },
     { label: 'GOLD', href: '#' },
     { label: 'DIAMOND', href: '#' },
   ];

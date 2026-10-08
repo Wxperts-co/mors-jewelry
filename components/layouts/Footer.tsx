@@ -87,7 +87,7 @@ export const Footer = () => {
               </h3>
               <ul className="space-y-1.5 sm:space-y-3 text-xs sm:text-sm">
                 {[
-                  { label: 'All Products', href: '#' },
+                  { label: 'All Products', href: '/products' },
                   { label: 'Gold Jewelry', href: '#' },
                   { label: 'Diamonds', href: '#' },
                   { label: 'Sterling Silver', href: '#' },

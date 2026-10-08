@@ -258,16 +258,6 @@ export const ProductSection = () => {
                           {product.title}
                         </h3>
                       </Link>
-
-                      {/* Price Section */}
-                      <div className="flex items-baseline gap-1.5 sm:gap-2 pt-0.5">
-                        <span className="text-sm sm:text-base lg:text-lg font-extrabold text-[#996515]">
-                          ${price}
-                        </span>
-                        <span className="text-[10px] sm:text-xs text-neutral-400 line-through">
-                          ${(parseFloat(price) * 1.25).toFixed(2)}
-                        </span>
-                      </div>
                     </div>
                   </div>
 
@@ -354,15 +344,9 @@ export const ProductSection = () => {
                     {quickViewProduct.title}
                   </h3>
 
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-2xl sm:text-3xl font-extrabold text-[#996515]">
-                      ${parseFloat(quickViewProduct.msrp || '0').toFixed(2)}
-                    </span>
-                    <span className="text-sm text-neutral-400 line-through">
-                      $
-                      {(
-                        parseFloat(quickViewProduct.msrp || '0') * 1.25
-                      ).toFixed(2)}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md">
+                      In Stock & Ready to Ship
                     </span>
                   </div>
 
