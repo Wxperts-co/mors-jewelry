@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Mor's Jewelry & Repair | Fine Gold, Diamonds & Custom Jewelry",
-  description: "Exquisite fine jewelry, certified diamonds, gold, silver, and master repair services in Stonecrest, GA.",
+  description: "Exquisite fine jewelry, certified diamonds, gold, silver, and master repair services.",
   icons: {
     icon: "/logo/favicon.webp",
     shortcut: "/logo/favicon.webp",

@@ -53,6 +53,7 @@ export const STORE_CONFIGS: Record<string, StoreContactInfo> = {
 export function getStoreConfigByHostname(hostname?: string): StoreContactInfo {
   if (!hostname) return STORE_CONFIGS[DEFAULT_DOMAIN];
   
-  const cleanHostname = hostname.toLowerCase().replace(/^www\./, '');
+  const hostWithoutPort = hostname.split(':')[0];
+  const cleanHostname = hostWithoutPort.toLowerCase().replace(/^www\./, '');
   return STORE_CONFIGS[cleanHostname] || STORE_CONFIGS[DEFAULT_DOMAIN];
 }

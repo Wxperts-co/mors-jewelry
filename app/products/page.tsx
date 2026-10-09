@@ -3,9 +3,9 @@ import type { Metadata } from 'next';
 import { ProductsPage } from '@/components/pages/ProductsPage';
 
 export const metadata: Metadata = {
-  title: "All Fine Jewelry & Watch Products | Mor's Jewelry & Repair",
+  title: "All Fine Jewelry & Watch Products | Mor's Jewelry",
   description:
-    "Explore our complete catalog of handcrafted fine gold, certified diamonds, sterling silver, and bespoke jewelry creations in Stonecrest, GA.",
+    "Explore our complete catalog of handcrafted fine gold, certified diamonds, sterling silver, and bespoke jewelry creations.",
 };
 
 export default function Page() {
