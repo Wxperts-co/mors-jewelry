@@ -5,9 +5,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, ChevronRight, Clock } from 'lucide-react';
+import { useSiteConfig } from '@/hooks/useSiteConfig';
 
 export const Footer = () => {
   const [currentYear, setCurrentYear] = React.useState(2026);
+  const siteConfig = useSiteConfig();
 
   React.useEffect(() => {
     setCurrentYear(new Date().getFullYear());
@@ -64,7 +66,7 @@ export const Footer = () => {
               >
                 <Image
                   src="/logo/logo.png"
-                  alt="Mor's Jewelry & Repair"
+                  alt={siteConfig.storeName}
                   width={180}
                   height={65}
                   className="h-12 sm:h-16 w-auto object-contain drop-shadow-[0_4px_12px_rgba(212,175,55,0.2)]"
@@ -137,7 +139,7 @@ export const Footer = () => {
             </h3>
             <div className="space-y-2.5 sm:space-y-4 text-xs sm:text-sm">
               <motion.a
-                href="https://maps.app.goo.gl/Hd7zPdp71V3kA7Se6"
+                href={siteConfig.mapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ x: 3 }}
@@ -145,23 +147,23 @@ export const Footer = () => {
               >
                 <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E5C16C] mt-0.5 shrink-0 stroke-[2.2] group-hover:scale-110 transition-transform" />
                 <span className="text-neutral-300 group-hover:text-[#F3D382] group-hover:underline underline-offset-4 font-medium leading-snug transition-colors">
-                  2929 Turner Hill Rd, Stonecrest, GA 30038
+                  {siteConfig.address}
                 </span>
               </motion.a>
 
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E5C16C] shrink-0 stroke-[2.2]" />
                 <div className="space-x-2 text-neutral-300 font-medium">
-                  <a href="tel:4702781018" className="hover:text-[#F3D382] transition-colors">(470) 278-1018</a>
+                  <a href={`tel:${siteConfig.phone}`} className="hover:text-[#F3D382] transition-colors">{siteConfig.phoneDisplay}</a>
                   <span className="text-neutral-600">|</span>
-                  <a href="tel:6783891831" className="hover:text-[#F3D382] transition-colors">(678) 389-1831</a>
+                  <a href={`tel:${siteConfig.mobile}`} className="hover:text-[#F3D382] transition-colors">{siteConfig.mobileDisplay}</a>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E5C16C] shrink-0 stroke-[2.2]" />
-                <a href="mailto:morsjewelry@gmail.com" className="text-neutral-300 hover:text-[#F3D382] font-medium transition-colors truncate">
-                  morsjewelry@gmail.com
+                <a href={`mailto:${siteConfig.email}`} className="text-neutral-300 hover:text-[#F3D382] font-medium transition-colors truncate">
+                  {siteConfig.email}
                 </a>
               </div>
 
@@ -171,11 +173,11 @@ export const Footer = () => {
                 <div className="text-neutral-300 font-medium leading-snug space-y-0.5 text-[11px] sm:text-xs">
                   <div className="flex items-center gap-2">
                     <span className="text-neutral-400">Mon – Sat:</span>
-                    <span className="text-white font-semibold">11:00 AM – 8:00 PM</span>
+                    <span className="text-white font-semibold">{siteConfig.hours.weekdays}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-neutral-400">Sunday:</span>
-                    <span className="text-white font-semibold">12:00 PM – 6:00 PM</span>
+                    <span className="text-white font-semibold">{siteConfig.hours.sunday}</span>
                   </div>
                 </div>
               </div>

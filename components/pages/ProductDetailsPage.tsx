@@ -18,12 +18,14 @@ import {
 } from 'lucide-react';
 import rawProductsData from '@/data/tbl_new_product.json';
 import { ProductItem } from '@/components/home/ProductSection';
+import { useSiteConfig } from '@/hooks/useSiteConfig';
 
 interface ProductDetailsPageProps {
   productId: string;
 }
 
 export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productId }) => {
+  const siteConfig = useSiteConfig();
   const [selectedQty, setSelectedQty] = useState<number>(1);
   const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'details' | 'shipping' | 'care'>('details');
@@ -229,11 +231,11 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
 
             {/* Call / Direct Inquiry */}
             <a
-              href="tel:4702781018"
+              href={`tel:${siteConfig.phone}`}
               className="flex items-center justify-center gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl border border-neutral-200 hover:border-[#D4AF37] text-neutral-800 hover:text-[#996515] bg-white text-xs sm:text-sm font-semibold tracking-wide transition-all shadow-xs"
             >
               <Phone className="w-3.5 h-3.5 text-[#A17416]" />
-              <span>Questions? Call (470) 278-1018</span>
+              <span>Questions? Call {siteConfig.phoneDisplay}</span>
             </a>
 
             {/* Assurance Badges */}

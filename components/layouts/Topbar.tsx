@@ -3,8 +3,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Smartphone, Mail } from 'lucide-react';
+import { useSiteConfig } from '@/hooks/useSiteConfig';
 
 export const Topbar = () => {
+  const siteConfig = useSiteConfig();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -15 }}
@@ -18,7 +21,7 @@ export const Topbar = () => {
           {/* Left Side: Address (Icon only on mobile, full address on desktop) */}
           <div className="flex items-center justify-start">
             <motion.a
-              href="https://maps.app.goo.gl/Hd7zPdp71V3kA7Se6"
+              href={siteConfig.mapUrl}
               target="_blank"
               rel="noopener noreferrer"
               whileHover={{ scale: 1.05, y: -1 }}
@@ -27,7 +30,7 @@ export const Topbar = () => {
               className="inline-flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1 rounded-full bg-black/10 hover:bg-black/15 transition-colors shadow-sm font-medium text-neutral-950"
             >
               <MapPin className="w-3.5 h-3.5 text-neutral-950 shrink-0 stroke-[2.2]" />
-              <span className="hidden sm:inline font-bold">2929 Turner Hill Rd, Stonecrest, GA 30038</span>
+              <span className="hidden sm:inline font-bold">{siteConfig.address}</span>
             </motion.a>
           </div>
 
@@ -35,38 +38,38 @@ export const Topbar = () => {
           <div className="flex items-center justify-end gap-x-2 sm:gap-x-3 lg:gap-x-4">
             {/* Phone */}
             <motion.a
-              href="tel:4702781018"
-              aria-label="Call Store (470) 278-1018"
+              href={`tel:${siteConfig.phone}`}
+              aria-label={`Call Store ${siteConfig.phoneDisplay}`}
               whileHover={{ scale: 1.05, y: -1 }}
               whileTap={{ scale: 0.97 }}
               className="inline-flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1 rounded-full bg-black/10 hover:bg-black/15 transition-colors shadow-sm text-neutral-950"
             >
               <Phone className="w-3.5 h-3.5 text-neutral-950 shrink-0 stroke-[2.2]" />
-              <span className="hidden sm:inline">(470) 278-1018</span>
+              <span className="hidden sm:inline">{siteConfig.phoneDisplay}</span>
             </motion.a>
 
             {/* Mobile */}
             <motion.a
-              href="tel:6783891831"
-              aria-label="Call Mobile (678) 389-1831"
+              href={`tel:${siteConfig.mobile}`}
+              aria-label={`Call Mobile ${siteConfig.mobileDisplay}`}
               whileHover={{ scale: 1.05, y: -1 }}
               whileTap={{ scale: 0.97 }}
               className="inline-flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1 rounded-full bg-black/10 hover:bg-black/15 transition-colors shadow-sm text-neutral-950"
             >
               <Smartphone className="w-3.5 h-3.5 text-neutral-950 shrink-0 stroke-[2.2]" />
-              <span className="hidden sm:inline">(678) 389-1831</span>
+              <span className="hidden sm:inline">{siteConfig.mobileDisplay}</span>
             </motion.a>
 
             {/* Email */}
             <motion.a
-              href="mailto:morsjewelry@gmail.com"
-              aria-label="Email morsjewelry@gmail.com"
+              href={`mailto:${siteConfig.email}`}
+              aria-label={`Email ${siteConfig.email}`}
               whileHover={{ scale: 1.05, y: -1 }}
               whileTap={{ scale: 0.97 }}
               className="inline-flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1 rounded-full bg-black/10 hover:bg-black/15 transition-colors shadow-sm text-neutral-950"
             >
               <Mail className="w-3.5 h-3.5 text-neutral-950 shrink-0 stroke-[2.2]" />
-              <span className="hidden sm:inline">morsjewelry@gmail.com</span>
+              <span className="hidden sm:inline">{siteConfig.email}</span>
             </motion.a>
           </div>
 

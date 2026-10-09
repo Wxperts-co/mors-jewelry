@@ -4,8 +4,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PhoneCall, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useSiteConfig } from '@/hooks/useSiteConfig';
 
 export const HeroSection = () => {
+  const siteConfig = useSiteConfig();
   const slides = [
       {
       id: 2,
@@ -133,7 +135,7 @@ export const HeroSection = () => {
       {/* Fixed Compact 3D Floating Action Button on Bottom-Right */}
       <div className="fixed bottom-5 right-5 z-50">
         <motion.a
-          href="tel:4702781018"
+          href={`tel:${siteConfig.phone}`}
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.5 }}
@@ -152,7 +154,7 @@ export const HeroSection = () => {
 
           {/* Text */}
           <span className="text-xs font-black text-black">
-            (470) 278-1018
+            {siteConfig.phoneDisplay}
           </span>
         </motion.a>
       </div>
