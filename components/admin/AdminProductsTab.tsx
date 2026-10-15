@@ -246,7 +246,14 @@ export const AdminProductsTab: React.FC<AdminProductsTabProps> = ({
           const row = info.row.original;
           const idNum = parseInt(row.id, 10);
           const imgNum = !isNaN(idNum) ? ((idNum - 1) % 20) + 1 : 1;
-          const imgSrc = row.thumb_image || row.large_image || `/products/product${imgNum}.jpg`;
+          const customImg = row.thumb_image?.trim() || row.large_image?.trim();
+          const isRealUploaded =
+            customImg &&
+            (customImg.startsWith('/uploads/') ||
+              customImg.startsWith('http://') ||
+              customImg.startsWith('https://') ||
+              customImg.startsWith('data:'));
+          const imgSrc = isRealUploaded ? customImg : `/products/product${imgNum}.jpg`;
 
           return (
             <div className="flex items-center gap-3">

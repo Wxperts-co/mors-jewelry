@@ -165,11 +165,15 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialCategory }) =
 
   // Image resolver
   const getProductImage = (product: ProductItem, index: number) => {
-    if (product.thumb_image && product.thumb_image.trim()) {
-      return product.thumb_image;
-    }
-    if (product.large_image && product.large_image.trim()) {
-      return product.large_image;
+    const customImg = product.thumb_image?.trim() || product.large_image?.trim();
+    if (
+      customImg &&
+      (customImg.startsWith('/uploads/') ||
+        customImg.startsWith('http://') ||
+        customImg.startsWith('https://') ||
+        customImg.startsWith('data:'))
+    ) {
+      return customImg;
     }
     const idNum = parseInt(product.id, 10);
     const imgNum = !isNaN(idNum) ? ((idNum - 1) % 20) + 1 : (index % 20) + 1;
@@ -192,12 +196,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialCategory }) =
 
   const handleAddToCart = (product: ProductItem, e?: React.MouseEvent, qty = 1) => {
     if (e) e.stopPropagation();
-    const idNum = parseInt(product.id, 10);
-    const imgNum = !isNaN(idNum) ? ((idNum - 1) % 20) + 1 : 1;
-    const imgUrl =
-      product.thumb_image?.trim() ||
-      product.large_image?.trim() ||
-      `/products/product${imgNum}.jpg`;
+    const imgUrl = getProductImage(product, 0);
 
     addItem(
       {

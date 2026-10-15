@@ -72,11 +72,15 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
   }, [products, product]);
 
   const getProductImage = (p: ProductItem) => {
-    if (p.thumb_image && p.thumb_image.trim()) {
-      return p.thumb_image;
-    }
-    if (p.large_image && p.large_image.trim()) {
-      return p.large_image;
+    const customImg = p.thumb_image?.trim() || p.large_image?.trim();
+    if (
+      customImg &&
+      (customImg.startsWith('/uploads/') ||
+        customImg.startsWith('http://') ||
+        customImg.startsWith('https://') ||
+        customImg.startsWith('data:'))
+    ) {
+      return customImg;
     }
     const idNum = parseInt(p.id, 10);
     const imgNum = !isNaN(idNum) ? ((idNum - 1) % 20) + 1 : 1;
