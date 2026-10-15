@@ -90,10 +90,10 @@ export const Footer = () => {
               <ul className="space-y-1.5 sm:space-y-3 text-xs sm:text-sm">
                 {[
                   { label: 'All Products', href: '/products' },
-                  { label: 'Gold Jewelry', href: '#' },
-                  { label: 'Diamonds', href: '#' },
-                  { label: 'Sterling Silver', href: '#' },
-                  { label: 'Custom Design', href: '#' },
+                  { label: 'Gold Jewelry', href: '/products/category/gold' },
+                  { label: 'Diamonds', href: '/products/category/diamond' },
+                  { label: 'Sterling Silver', href: '/products/category/silver' },
+                  { label: 'Custom Design', href: '/products' },
                 ].map((link) => (
                   <motion.li key={link.label} whileHover={{ x: 4 }} transition={{ type: 'spring', stiffness: 400 }}>
                     <Link href={link.href} className="text-neutral-300 hover:text-[#F3D382] font-medium transition-colors flex items-center gap-1.5 group">
@@ -117,7 +117,7 @@ export const Footer = () => {
                   { label: 'Watch Repair', href: '#' },
                   { label: 'Ring Resizing', href: '#' },
                   { label: 'Free Cleaning', href: '#' },
-                  { label: 'Contact Us', href: '#' },
+                  { label: 'Contact Us', href: '/contact' },
                 ].map((link) => (
                   <motion.li key={link.label} whileHover={{ x: 4 }} transition={{ type: 'spring', stiffness: 400 }}>
                     <Link href={link.href} className="text-neutral-300 hover:text-[#F3D382] font-medium transition-colors flex items-center gap-1.5 group">

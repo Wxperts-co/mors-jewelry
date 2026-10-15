@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +19,7 @@ import {
 import rawProductsData from '@/data/tbl_new_product.json';
 import { ProductItem } from '@/components/home/ProductSection';
 import { useSiteConfig } from '@/hooks/useSiteConfig';
+import { useCart } from '@/context/CartContext';
 
 interface ProductDetailsPageProps {
   productId: string;
@@ -26,10 +27,30 @@ interface ProductDetailsPageProps {
 
 export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productId }) => {
   const siteConfig = useSiteConfig();
+  const { addItem } = useCart();
   const [selectedQty, setSelectedQty] = useState<number>(1);
   const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'details' | 'shipping' | 'care'>('details');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [dbProduct, setDbProduct] = useState<ProductItem | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch(`/api/products?id=${encodeURIComponent(productId)}`, { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data?.success && data?.product) {
+          setDbProduct(data.product);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch product details from db:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [productId]);
 
   const products: ProductItem[] = useMemo(() => {
     return rawProductsData as ProductItem[];
@@ -37,11 +58,12 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
 
   // Find product by id or fallback to first
   const product = useMemo(() => {
+    if (dbProduct) return dbProduct;
     return (
       products.find((p) => p.id === productId || p.alias === productId) ||
       products[0]
     );
-  }, [products, productId]);
+  }, [products, productId, dbProduct]);
 
   const relatedProducts = useMemo(() => {
     return products
@@ -50,6 +72,12 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
   }, [products, product]);
 
   const getProductImage = (p: ProductItem) => {
+    if (p.thumb_image && p.thumb_image.trim()) {
+      return p.thumb_image;
+    }
+    if (p.large_image && p.large_image.trim()) {
+      return p.large_image;
+    }
     const idNum = parseInt(p.id, 10);
     const imgNum = !isNaN(idNum) ? ((idNum - 1) % 20) + 1 : 1;
     return `/products/product${imgNum}.jpg`;
@@ -65,6 +93,24 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
   };
 
   const handleAddToCart = () => {
+    addItem(
+      {
+        id: product.id,
+        title: product.title,
+        price: product.msrp,
+        image: mainImage,
+        category:
+          product.category_id === '1'
+            ? 'Gold'
+            : product.category_id === '2'
+            ? 'Diamond'
+            : product.category_id === '3'
+            ? 'Silver'
+            : undefined,
+        quantity: selectedQty,
+      },
+      true
+    );
     showToast(`Added ${selectedQty} × "${product.title}" to your bag!`);
   };
 

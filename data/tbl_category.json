@@ -1,0 +1,6 @@
+[
+
+{"category_id":"1","parent_id":"0","category_name":"Gold","photourl":null,"alias":"gold","updated_at":"2022-08-31 06:16:47","created_at":"2022-08-31 06:05:52","activatedstatus":"1"},
+{"category_id":"2","parent_id":"0","category_name":"Diamond","photourl":null,"alias":"diamond","updated_at":"2022-08-31 06:16:43","created_at":"2022-08-31 06:06:00","activatedstatus":"1"},
+{"category_id":"3","parent_id":"0","category_name":"Silver","photourl":null,"alias":"silver","updated_at":"2025-08-07 15:10:25","created_at":"2022-08-31 06:06:43","activatedstatus":"1"}
+]

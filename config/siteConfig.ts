@@ -1,7 +1,9 @@
 export interface StoreContactInfo {
   storeName: string;
+  badge?: string;
   address: string;
   mapUrl: string;
+  embedMapUrl: string;
   phone: string;
   phoneDisplay: string;
   mobile: string;
@@ -18,8 +20,11 @@ export const DEFAULT_DOMAIN = 'morsjewelryandrepair.com';
 export const STORE_CONFIGS: Record<string, StoreContactInfo> = {
   'morsjewelryandrepair.com': {
     storeName: "Mor's Jewelry & Repair",
+    badge: 'Main Showroom & Workshop',
     address: '2929 Turner Hill Rd, Stonecrest, GA 30038',
-    mapUrl: 'https://maps.app.goo.gl/Hd7zPdp71V3kA7Se6',
+    mapUrl: 'https://maps.app.goo.gl/h2U25e4cWbKsxhxP7',
+    embedMapUrl:
+      "https://maps.google.com/maps?q=Mor's+Jewelry+And+Repair,+2929+Turner+Hill+Rd,+Stonecrest,+GA+30038&t=&z=15&ie=UTF8&iwloc=&output=embed",
     phone: '4702781018',
     phoneDisplay: '(470) 278-1018',
     mobile: '6783891831',
@@ -32,8 +37,11 @@ export const STORE_CONFIGS: Record<string, StoreContactInfo> = {
   },
   'morsjewelrys.com': {
     storeName: "Mor's Jewelry",
+    badge: 'Boutique Showroom',
     address: '99 Hwy 81 #108, McDonough, GA 30253',
     mapUrl: 'https://share.google/LcmZEazqBRBxiUppz',
+    embedMapUrl:
+      'https://maps.google.com/maps?q=99+GA-81+%23108,+McDonough,+GA+30253&t=&z=15&ie=UTF8&iwloc=&output=embed',
     phone: '4702781018',
     phoneDisplay: '(470) 278-1018',
     mobile: '6783891831',

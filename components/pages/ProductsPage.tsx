@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles,
@@ -17,72 +18,159 @@ import {
   RotateCcw,
   Home,
 } from 'lucide-react';
-import rawProductsData from '@/data/tbl_new_product.json';
 import { ProductItem } from '@/components/home/ProductSection';
+import { useCart } from '@/context/CartContext';
 
-type CategoryTab = 'all' | 'diamond' | 'gold' | 'silver';
+export interface CategoryTabItem {
+  key: string;
+  label: string;
+  category_id?: string;
+}
 
-export const ProductsPage = () => {
-  const [activeTab, setActiveTab] = useState<CategoryTab>('all');
+export type CategoryTab = string;
+
+interface ProductsPageProps {
+  initialCategory?: string;
+}
+
+// In-memory cache across tab switches and route changes to eliminate tab vanishing / blinking
+let cachedTabs: CategoryTabItem[] = [
+  { key: 'all', label: 'All Products' },
+  { key: 'gold', label: 'Gold', category_id: '1' },
+  { key: 'diamond', label: 'Diamond', category_id: '2' },
+  { key: 'silver', label: 'Silver', category_id: '3' },
+];
+const cachedProductsByCategory: Record<string, ProductItem[]> = {};
+
+export const ProductsPage: React.FC<ProductsPageProps> = ({ initialCategory }) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const pathCategory = pathname?.startsWith('/products/category/')
+    ? decodeURIComponent(pathname.replace('/products/category/', '').split('/')[0] || '').toLowerCase()
+    : undefined;
+
+  const currentCategory = (initialCategory || pathCategory || searchParams.get('category') || 'all').toLowerCase();
+
+  const [activeTab, setActiveTab] = useState<CategoryTab>(currentCategory);
+  const [tabs, setTabs] = useState<CategoryTabItem[]>(cachedTabs);
+  const [products, setProducts] = useState<ProductItem[]>(cachedProductsByCategory[currentCategory] || []);
+  const [isLoading, setIsLoading] = useState<boolean>(!cachedProductsByCategory[currentCategory]);
   const [visibleCount, setVisibleCount] = useState<number>(16);
   const [wishlist, setWishlist] = useState<Record<string, boolean>>({});
   const [quickViewProduct, setQuickViewProduct] = useState<ProductItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selectedQty, setSelectedQty] = useState<number>(1);
+  const { addItem } = useCart();
 
-  // Cast imported JSON to typed array
-  const allProducts: ProductItem[] = useMemo(() => {
-    return (rawProductsData as ProductItem[]).filter(
-      (item) => item.status === '1' || item.status === undefined
-    );
+  // Synchronize activeTab whenever URL or category route changes
+  useEffect(() => {
+    setActiveTab(currentCategory);
+    setVisibleCount(16);
+  }, [currentCategory]);
+
+  // Support browser Back/Forward navigation without page unmounting
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      const cat = path.startsWith('/products/category/')
+        ? decodeURIComponent(path.replace('/products/category/', '').split('/')[0] || '').toLowerCase()
+        : 'all';
+      setActiveTab(cat);
+      setVisibleCount(16);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Filter products by category tab
-  const filteredProducts = useMemo(() => {
-    if (activeTab === 'all') return allProducts;
+  const handleTabClick = (tabKey: string) => {
+    setActiveTab(tabKey);
+    setVisibleCount(16);
+    const newUrl = tabKey === 'all' ? '/products' : `/products/category/${encodeURIComponent(tabKey)}`;
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ category: tabKey }, '', newUrl);
+    }
+  };
 
-    if (activeTab === 'diamond') {
-      return allProducts.filter((p) => {
-        const id = parseInt(p.id, 10);
-        return (
-          id % 3 === 1 ||
-          p.title?.toLowerCase().includes('diamond') ||
-          p.keywords?.toLowerCase().includes('diamond')
-        );
+  // 1. Fetch categories dynamically from the DB and keep cachedTabs updated
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/categories')
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data?.success && Array.isArray(data.categories) && data.categories.length > 0) {
+          const freshTabs = [
+            { key: 'all', label: 'All Products' },
+            ...data.categories.map((c: any) => ({
+              key: (c.slug || c.alias || c.name || '').toLowerCase(),
+              label: c.name || c.category_name,
+              category_id: c.category_id ? String(c.category_id) : undefined,
+            })),
+          ];
+          cachedTabs = freshTabs;
+          setTabs(freshTabs);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch categories from db:', err);
       });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 2. Fetch products dynamically from the DB with instant memory cache
+  useEffect(() => {
+    let isMounted = true;
+
+    // If already in memory cache, display immediately with zero layout shift
+    if (cachedProductsByCategory[activeTab]) {
+      setProducts(cachedProductsByCategory[activeTab]);
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
     }
 
-    if (activeTab === 'gold') {
-      return allProducts.filter((p) => {
-        const id = parseInt(p.id, 10);
-        return (
-          id % 3 === 2 ||
-          p.title?.toLowerCase().includes('gold') ||
-          p.keywords?.toLowerCase().includes('gold')
-        );
-      });
-    }
+    const url =
+      activeTab === 'all'
+        ? '/api/products'
+        : `/api/products?category=${encodeURIComponent(activeTab)}`;
 
-    if (activeTab === 'silver') {
-      return allProducts.filter((p) => {
-        const id = parseInt(p.id, 10);
-        return (
-          id % 3 === 0 ||
-          p.title?.toLowerCase().includes('silver') ||
-          p.keywords?.toLowerCase().includes('silver')
-        );
+    fetch(url, { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data?.success && Array.isArray(data.products)) {
+          cachedProductsByCategory[activeTab] = data.products;
+          setProducts(data.products);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch products from db:', err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
       });
-    }
 
-    return allProducts;
-  }, [allProducts, activeTab]);
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab]);
 
   const displayedProducts = useMemo(() => {
-    return filteredProducts.slice(0, visibleCount);
-  }, [filteredProducts, visibleCount]);
+    return products.slice(0, visibleCount);
+  }, [products, visibleCount]);
 
   // Image resolver
   const getProductImage = (product: ProductItem, index: number) => {
+    if (product.thumb_image && product.thumb_image.trim()) {
+      return product.thumb_image;
+    }
+    if (product.large_image && product.large_image.trim()) {
+      return product.large_image;
+    }
     const idNum = parseInt(product.id, 10);
     const imgNum = !isNaN(idNum) ? ((idNum - 1) % 20) + 1 : (index % 20) + 1;
     return `/products/product${imgNum}.jpg`;
@@ -102,8 +190,33 @@ export const ProductsPage = () => {
     });
   };
 
-  const handleAddToCart = (product: ProductItem, e?: React.MouseEvent) => {
+  const handleAddToCart = (product: ProductItem, e?: React.MouseEvent, qty = 1) => {
     if (e) e.stopPropagation();
+    const idNum = parseInt(product.id, 10);
+    const imgNum = !isNaN(idNum) ? ((idNum - 1) % 20) + 1 : 1;
+    const imgUrl =
+      product.thumb_image?.trim() ||
+      product.large_image?.trim() ||
+      `/products/product${imgNum}.jpg`;
+
+    addItem(
+      {
+        id: product.id,
+        title: product.title,
+        price: product.msrp,
+        image: imgUrl,
+        category:
+          product.category_id === '1'
+            ? 'Gold'
+            : product.category_id === '2'
+            ? 'Diamond'
+            : product.category_id === '3'
+            ? 'Silver'
+            : undefined,
+        quantity: qty,
+      },
+      true
+    );
     showToast(`"${product.title.slice(0, 24)}..." added to bag!`);
   };
 
@@ -112,13 +225,6 @@ export const ProductsPage = () => {
     setSelectedQty(1);
     setQuickViewProduct(product);
   };
-
-  const tabs: { key: CategoryTab; label: string }[] = [
-    { key: 'all', label: 'All Products' },
-    { key: 'diamond', label: 'Diamond' },
-    { key: 'gold', label: 'Gold' },
-    { key: 'silver', label: 'Silver' },
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FCFBF8] via-white to-[#FAF8F5] text-neutral-900 pb-20">
@@ -153,7 +259,19 @@ export const ProductsPage = () => {
               <span>Home</span>
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
-            <span className="text-neutral-900 font-bold">All Products</span>
+            {activeTab === 'all' ? (
+              <span className="text-neutral-900 font-bold">All Products</span>
+            ) : (
+              <>
+                <Link href="/products" className="hover:text-neutral-900 transition-colors">
+                  All Products
+                </Link>
+                <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
+                <span className="text-neutral-900 font-bold capitalize">
+                  {tabs.find((t) => t.key === activeTab)?.label || activeTab}
+                </span>
+              </>
+            )}
           </nav>
 
           {/* Heading */}
@@ -171,7 +289,7 @@ export const ProductsPage = () => {
 
             <div className="text-xs sm:text-sm font-semibold text-neutral-500 shrink-0">
               Showing <span className="font-bold text-neutral-900">{displayedProducts.length}</span> of{' '}
-              <span className="font-bold text-neutral-900">{filteredProducts.length}</span> items
+              <span className="font-bold text-neutral-900">{products.length}</span> items
             </div>
           </div>
         </div>
@@ -187,10 +305,7 @@ export const ProductsPage = () => {
             return (
               <button
                 key={tab.key}
-                onClick={() => {
-                  setActiveTab(tab.key);
-                  setVisibleCount(16);
-                }}
+                onClick={() => handleTabClick(tab.key)}
                 className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer ${
                   isActive
                     ? 'bg-neutral-900 text-white shadow-md scale-105 border border-neutral-900'
@@ -204,7 +319,23 @@ export const ProductsPage = () => {
         </div>
 
         {/* Product Grid */}
-        {displayedProducts.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-7">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-2xl bg-white border border-neutral-200/80 p-2 sm:p-3 space-y-3 animate-pulse shadow-xs"
+              >
+                <div className="w-full aspect-square rounded-xl bg-neutral-100" />
+                <div className="space-y-1.5 py-1">
+                  <div className="h-3.5 bg-neutral-100 rounded-md w-3/4" />
+                  <div className="h-3 bg-neutral-100/70 rounded-md w-1/2" />
+                </div>
+                <div className="h-8 bg-neutral-100 rounded-xl w-full" />
+              </div>
+            ))}
+          </div>
+        ) : displayedProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-7">
             {displayedProducts.map((product, index) => {
               const imgUrl = getProductImage(product, index);
@@ -308,7 +439,7 @@ export const ProductsPage = () => {
               Explore our other categories to discover more fine jewelry.
             </p>
             <button
-              onClick={() => setActiveTab('all')}
+              onClick={() => handleTabClick('all')}
               className="mt-6 px-6 py-2.5 rounded-full bg-neutral-900 hover:bg-[#855B0D] text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm"
             >
               View All Products
@@ -317,7 +448,7 @@ export const ProductsPage = () => {
         )}
 
         {/* Load More Button */}
-        {visibleCount < filteredProducts.length && (
+        {visibleCount < products.length && (
           <div className="mt-12 sm:mt-16 text-center">
             <button
               onClick={() => setVisibleCount((prev) => prev + 12)}
@@ -432,7 +563,7 @@ export const ProductsPage = () => {
                   <div className="space-y-2 pt-2">
                     <button
                       onClick={() => {
-                        handleAddToCart(quickViewProduct);
+                        handleAddToCart(quickViewProduct, undefined, selectedQty);
                         setQuickViewProduct(null);
                       }}
                       className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-neutral-900 to-neutral-800 hover:from-[#D4AF37] hover:to-[#B8860B] text-white hover:text-black font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer"

@@ -5,19 +5,22 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, ShoppingBag, Menu, X } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
 
 export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { openCart, totalCount } = useCart();
 
   const leftNavLinks = [
+    { label: 'HOME', href: '/' },
     { label: 'PRODUCTS', href: '/products' },
-    { label: 'GOLD', href: '#' },
-    { label: 'DIAMOND', href: '#' },
+    { label: 'GOLD', href: '/products/category/gold' },
+    { label: 'DIAMOND', href: '/products/category/diamond' },
   ];
 
   const rightNavLinks = [
-    { label: 'SILVER', href: '#' },
-    { label: 'CONTACT US', href: '#' },
+    { label: 'SILVER', href: '/products/category/silver' },
+    { label: 'CONTACT US', href: '/contact' },
   ];
 
   const allLinks = [...leftNavLinks, ...rightNavLinks];
@@ -36,7 +39,7 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-20 md:h-24">
           
           {/* Left Navigation (Desktop) */}
-          <nav className="hidden md:flex items-center space-x-6 lg:space-x-10 flex-1 justify-start">
+          <nav className="hidden md:flex items-center space-x-4 lg:space-x-8 flex-1 justify-start">
             {leftNavLinks.map((item, idx) => (
               <motion.div
                 key={item.label}
@@ -117,17 +120,18 @@ export const Navbar = () => {
 
               {/* Shopping Cart */}
               <motion.div whileHover={{ scale: 1.12, y: -2 }} whileTap={{ scale: 0.93 }}>
-                <Link
-                  href="#"
+                <button
+                  type="button"
+                  onClick={openCart}
                   aria-label="Shopping Cart"
-                  className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-neutral-900 border border-neutral-700/80 text-neutral-200 hover:text-[#F3D382] hover:border-[#D4AF37] hover:bg-neutral-800 shadow-[0_4px_12px_rgba(0,0,0,0.6)] transition-all"
+                  className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-neutral-900 border border-neutral-700/80 text-neutral-200 hover:text-[#F3D382] hover:border-[#D4AF37] hover:bg-neutral-800 shadow-[0_4px_12px_rgba(0,0,0,0.6)] transition-all cursor-pointer"
                 >
                   <ShoppingBag className="w-5 h-5 text-neutral-200 group-hover:text-[#F3D382] transition-colors stroke-[2]" />
                   {/* Cart Item Badge */}
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-extrabold text-black bg-gradient-to-r from-[#BA8C37] via-[#F3D382] to-[#BA8C37] rounded-full shadow-[0_0_8px_rgba(212,175,55,0.9)]">
-                    0
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-extrabold text-black bg-gradient-to-r from-[#BA8C37] via-[#F3D382] to-[#BA8C37] rounded-full shadow-[0_0_8px_rgba(212,175,55,0.9)]">
+                    {totalCount}
                   </span>
-                </Link>
+                </button>
               </motion.div>
             </div>
           </div>
@@ -144,16 +148,17 @@ export const Navbar = () => {
             </Link>
 
             {/* Mobile Cart Icon */}
-            <Link
-              href="#"
+            <button
+              type="button"
+              onClick={openCart}
               aria-label="Shopping Cart"
-              className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-200 hover:text-[#F3D382] transition-colors"
+              className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-200 hover:text-[#F3D382] transition-colors cursor-pointer"
             >
               <ShoppingBag className="w-4.5 h-4.5 text-neutral-200 stroke-[2]" />
-              <span className="absolute -top-1 -right-1 flex items-center justify-center w-3.5 h-3.5 text-[9px] font-extrabold text-black bg-[#F3D382] rounded-full">
-                0
+              <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-3.5 h-3.5 px-0.5 text-[9px] font-extrabold text-black bg-[#F3D382] rounded-full">
+                {totalCount}
               </span>
-            </Link>
+            </button>
 
             {/* Mobile Menu Button */}
             <motion.button

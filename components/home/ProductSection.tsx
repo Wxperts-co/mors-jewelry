@@ -18,6 +18,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import rawProductsData from '@/data/tbl_new_product.json';
+import { useCart } from '@/context/CartContext';
 
 export interface ProductItem {
   id: string;
@@ -49,6 +50,7 @@ export const ProductSection = () => {
   const [quickViewProduct, setQuickViewProduct] = useState<ProductItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selectedQty, setSelectedQty] = useState<number>(1);
+  const { addItem } = useCart();
 
   // Cast imported JSON to typed array
   const products: ProductItem[] = useMemo(() => {
@@ -97,8 +99,30 @@ export const ProductSection = () => {
     });
   };
 
-  const handleAddToCart = (product: ProductItem, e?: React.MouseEvent) => {
+  const handleAddToCart = (product: ProductItem, e?: React.MouseEvent, qty = 1) => {
     if (e) e.stopPropagation();
+    const idNum = parseInt(product.id, 10);
+    const imgNum = !isNaN(idNum) ? ((idNum - 1) % 20) + 1 : 1;
+    const imgUrl = `/products/product${imgNum}.jpg`;
+
+    addItem(
+      {
+        id: product.id,
+        title: product.title,
+        price: product.msrp,
+        image: imgUrl,
+        category:
+          product.category_id === '1'
+            ? 'Gold'
+            : product.category_id === '2'
+            ? 'Diamond'
+            : product.category_id === '3'
+            ? 'Silver'
+            : undefined,
+        quantity: qty,
+      },
+      true
+    );
     showToast(`"${product.title.slice(0, 24)}..." added to bag!`);
   };
 
@@ -377,7 +401,7 @@ export const ProductSection = () => {
 
                     <button
                       onClick={() => {
-                        handleAddToCart(quickViewProduct);
+                        handleAddToCart(quickViewProduct, undefined, selectedQty);
                         setQuickViewProduct(null);
                       }}
                       className="flex-1 flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-neutral-900 hover:bg-gradient-to-r hover:from-[#D4AF37] hover:to-[#B8860B] text-white hover:text-black font-bold text-xs sm:text-sm tracking-wider uppercase transition-all shadow-md cursor-pointer"
