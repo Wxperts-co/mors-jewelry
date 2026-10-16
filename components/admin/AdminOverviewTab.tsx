@@ -7,6 +7,7 @@ import {
   ShoppingBag,
   TrendingUp,
   Users,
+  ShieldCheck,
   RefreshCw,
   Sparkles,
   ArrowUpRight,
@@ -38,6 +39,7 @@ interface AdminOverviewTabProps {
     totalCategories: number;
     totalOrders: number;
     totalAdmins: number;
+    totalUsers?: number;
     totalRevenue: string;
   };
   orders: any[];
@@ -220,10 +222,16 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
       icon: TrendingUp,
     },
     {
+      label: 'Registered Users',
+      value: String(stats.totalUsers ?? 0),
+      change: 'Active customers',
+      icon: Users,
+    },
+    {
       label: 'Admin Accounts',
       value: String(stats.totalAdmins),
-      change: 'Active administrators',
-      icon: Users,
+      change: 'Authorized staff',
+      icon: ShieldCheck,
     },
   ];
 
@@ -287,7 +295,7 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
   return (
     <div className="space-y-8">
       {/* Top Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {statsCards.map((s, idx) => {
           const Icon = s.icon;
           return (

@@ -36,7 +36,8 @@ const tabTitles: Record<AdminTab, { title: string; subtitle: string }> = {
   products: { title: 'Product Catalog', subtitle: 'Fine jewelry collection & stock management' },
   categories: { title: 'Collections & Categories', subtitle: 'Jewelry classifications & taxonomy' },
   orders: { title: 'Orders & Requests', subtitle: 'Customer purchases & repair inquiries' },
-  users: { title: 'Team & Accounts', subtitle: 'Admin privileges & customer records' },
+  users: { title: 'Registered Users', subtitle: 'Customer profiles, contact info & addresses' },
+  admins: { title: 'Administrator Accounts', subtitle: 'Store administrators & team permissions' },
   settings: { title: 'Store Settings', subtitle: 'System preferences & security configuration' },
   'reset-password': { title: 'Reset Password', subtitle: 'Verify email & security captcha to update credentials' },
 };

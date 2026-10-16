@@ -65,23 +65,23 @@ export const CartDrawer: React.FC = () => {
           />
 
           {/* Drawer Slider from Right Side */}
-          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10 pointer-events-none">
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10 pointer-events-none">
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-              className="w-screen max-w-md pointer-events-auto bg-[#0E0E0E] text-neutral-100 shadow-[0_0_50px_rgba(0,0,0,0.8)] border-l border-[#D4AF37]/30 flex flex-col justify-between"
+              className="w-full sm:w-screen max-w-full sm:max-w-md pointer-events-auto bg-[#0E0E0E] text-neutral-100 shadow-[0_0_50px_rgba(0,0,0,0.8)] border-l border-[#D4AF37]/30 flex flex-col justify-between h-full"
             >
               {/* Header */}
-              <div className="px-5 sm:px-6 pt-5 pb-4 border-b border-neutral-800/80 bg-neutral-950/80 backdrop-blur-md">
+              <div className="px-4 sm:px-6 pt-5 pb-4 border-b border-neutral-800/80 bg-neutral-950/80 backdrop-blur-md">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="p-2 rounded-xl bg-gradient-to-br from-[#BA8C37]/20 to-[#F3D382]/10 border border-[#D4AF37]/40 text-[#F3D382]">
                       <ShoppingBag className="w-5 h-5" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                      <h2 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
                         <span>Your Shopping Bag</span>
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#F3D382] border border-[#D4AF37]/40">
                           {totalCount} {totalCount === 1 ? 'item' : 'items'}
@@ -103,7 +103,7 @@ export const CartDrawer: React.FC = () => {
               </div>
 
               {/* Items List / Empty State (Scrollable Area) */}
-              <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 divide-y divide-neutral-800/60 scrollbar-thin scrollbar-thumb-neutral-800">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 divide-y divide-neutral-800/60 scrollbar-thin scrollbar-thumb-neutral-800">
                 {items.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center py-12 px-2">
                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-neutral-900 to-neutral-800 border border-[#D4AF37]/30 flex items-center justify-center text-[#F3D382] mb-4 shadow-[0_0_30px_rgba(212,175,55,0.15)]">
@@ -245,7 +245,7 @@ export const CartDrawer: React.FC = () => {
 
               {/* Footer (when items exist) */}
               {items.length > 0 && (
-                <div className="p-5 sm:p-6 border-t border-neutral-800/90 bg-neutral-950/95 space-y-4">
+                <div className="p-4 sm:p-6 border-t border-neutral-800/90 bg-neutral-950/95 space-y-4">
                   {/* Pricing Breakdown */}
                   <div className="space-y-1.5 text-xs text-neutral-300">
                     <div className="flex justify-between items-center text-sm font-bold text-white">

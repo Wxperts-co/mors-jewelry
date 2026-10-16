@@ -12,11 +12,12 @@ import {
   Settings,
   KeyRound,
   ChevronLeft,
+  ShieldCheck,
   ChevronRight,
   X,
 } from 'lucide-react';
 
-export type AdminTab = 'overview' | 'products' | 'categories' | 'orders' | 'users' | 'settings' | 'reset-password';
+export type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'users' | 'admins' | 'settings' | 'reset-password';
 
 interface AdminSidebarProps {
   activeTab: AdminTab;
@@ -34,11 +35,12 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'orders', label: 'Orders', icon: ShoppingBag },
   { id: 'products', label: 'Products', icon: Package },
   { id: 'categories', label: 'Categories', icon: Tags },
-  { id: 'orders', label: 'Orders', icon: ShoppingBag },
-  { id: 'users', label: 'Users & Admins', icon: Users },
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'users', label: 'Users', icon: Users },
+  { id: 'admins', label: 'Admins', icon: ShieldCheck },
+
   { id: 'reset-password', label: 'Reset Password', icon: KeyRound },
 ];
 

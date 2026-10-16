@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import rawProductsData from '@/data/tbl_new_product.json';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 
 export interface ProductItem {
   id: string;
@@ -27,6 +28,7 @@ export interface ProductItem {
   sku?: string;
   title: string;
   alias?: string;
+  slug?: string;
   alt_name?: string;
   size?: string;
   description?: string;
@@ -46,11 +48,11 @@ type TabType = 'all' | 'featured' | 'best_seller' | 'new_arrival';
 
 export const ProductSection = () => {
   const [activeTab, setActiveTab] = useState<TabType>('all');
-  const [wishlist, setWishlist] = useState<Record<string, boolean>>({});
   const [quickViewProduct, setQuickViewProduct] = useState<ProductItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selectedQty, setSelectedQty] = useState<number>(1);
   const { addItem } = useCart();
+  const { isInWishlist, toggleWishlist: contextToggleWishlist } = useWishlist();
 
   // Cast imported JSON to typed array
   const products: ProductItem[] = useMemo(() => {
@@ -100,13 +102,27 @@ export const ProductSection = () => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const toggleWishlist = (id: string, e: React.MouseEvent) => {
+  const toggleWishlist = (product: ProductItem, e: React.MouseEvent) => {
     e.stopPropagation();
-    setWishlist((prev) => {
-      const isFav = !prev[id];
-      showToast(isFav ? 'Added to your Wishlist' : 'Removed from Wishlist');
-      return { ...prev, [id]: isFav };
+    e.preventDefault();
+    const imgUrl = getProductImage(product, 0);
+    const isAdded = contextToggleWishlist({
+      id: product.id,
+      title: product.title,
+      price: product.msrp,
+      image: imgUrl,
+      category:
+        product.category_id === '1'
+          ? 'Gold'
+          : product.category_id === '2'
+          ? 'Diamond'
+          : product.category_id === '3'
+          ? 'Silver'
+          : undefined,
+      slug: product.slug || product.alias,
+      description: product.description,
     });
+    showToast(isAdded ? `Added "${product.title}" to your Wishlist` : 'Removed from Wishlist');
   };
 
   const handleAddToCart = (product: ProductItem, e?: React.MouseEvent, qty = 1) => {
@@ -186,7 +202,7 @@ export const ProductSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900"
+            className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900"
           >
             <span className="bg-gradient-to-r from-neutral-950 via-[#78590F] to-neutral-900 bg-clip-text text-transparent">
               Masterpiece Creations
@@ -214,7 +230,7 @@ export const ProductSection = () => {
             {displayedProducts.map((product, index) => {
               const imgUrl = getProductImage(product, index);
               const price = parseFloat(product.msrp || '0').toFixed(2);
-              const isWishlisted = !!wishlist[product.id];
+              const isWishlisted = isInWishlist(product.id);
               const isBestSeller = product.best_seller === '1';
               const isNew = product.new_arrival === '1';
               const isFeatured = product.featured === '1';
@@ -240,17 +256,18 @@ export const ProductSection = () => {
                       {/* Top Right Floating Actions */}
                       <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-20 flex flex-col gap-1 sm:gap-1.5">
                         <button
-                          onClick={(e) => toggleWishlist(product.id, e)}
+                          type="button"
+                          onClick={(e) => toggleWishlist(product, e)}
                           className={`p-1.5 rounded-full backdrop-blur-md transition-all duration-300 cursor-pointer shadow-sm ${
                             isWishlisted
                               ? 'bg-rose-500 text-white shadow-rose-500/40 scale-110'
                               : 'bg-white/90 text-neutral-600 hover:text-rose-500 hover:bg-white border border-neutral-200/80'
                           }`}
-                          title="Save to Wishlist"
+                          title={isWishlisted ? "Remove from Wishlist" : "Save to Wishlist"}
                         >
                           <Heart
                             className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${
-                              isWishlisted ? 'fill-current' : ''
+                              isWishlisted ? 'fill-current text-white' : ''
                             }`}
                           />
                         </button>
@@ -317,7 +334,7 @@ export const ProductSection = () => {
           className="mt-10 sm:mt-14 text-center"
         >
           <Link
-            href="#"
+            href="/products"
             className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-white hover:bg-neutral-900 border-2 border-[#D4AF37] text-neutral-900 hover:text-white font-bold text-xs sm:text-sm tracking-widest uppercase transition-all duration-300 shadow-[0_4px_15px_rgba(212,175,55,0.15)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.25)] cursor-pointer group"
           >
             <span>See All Products</span>

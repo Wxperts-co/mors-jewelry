@@ -33,11 +33,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout 
     categories: any[];
     orders: any[];
     admins: any[];
+    users: any[];
     stats: {
       totalProducts: number;
       totalCategories: number;
       totalOrders: number;
       totalAdmins: number;
+      totalUsers?: number;
       totalRevenue: string;
     };
   }>({
@@ -45,11 +47,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout 
     categories: [],
     orders: [],
     admins: [],
+    users: [],
     stats: {
       totalProducts: 0,
       totalCategories: 0,
       totalOrders: 0,
       totalAdmins: 0,
+      totalUsers: 0,
       totalRevenue: '$0',
     },
   });
@@ -112,6 +116,50 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout 
       stats: {
         ...prev.stats,
         totalProducts: prev.stats.totalProducts + 1,
+      },
+    }));
+  };
+
+  const handleCategoryCreated = (newCategory: any) => {
+    setDashboardData((prev) => ({
+      ...prev,
+      categories: [...prev.categories, newCategory],
+      stats: {
+        ...prev.stats,
+        totalCategories: prev.stats.totalCategories + 1,
+      },
+    }));
+  };
+
+  const handleAdminCreated = (newAdmin: any) => {
+    setDashboardData((prev) => ({
+      ...prev,
+      admins: [...prev.admins, newAdmin],
+      stats: {
+        ...prev.stats,
+        totalAdmins: prev.stats.totalAdmins + 1,
+      },
+    }));
+  };
+
+  const handleOrderUpdated = (updatedOrder: any) => {
+    setDashboardData((prev) => ({
+      ...prev,
+      orders: prev.orders.map((o) =>
+        o.id === updatedOrder.id || o.orderNumber === updatedOrder.orderNumber
+          ? { ...o, ...updatedOrder }
+          : o
+      ),
+    }));
+  };
+
+  const handleOrderDeleted = (orderId: string) => {
+    setDashboardData((prev) => ({
+      ...prev,
+      orders: prev.orders.filter((o) => o.id !== orderId && o.orderNumber !== orderId),
+      stats: {
+        ...prev.stats,
+        totalOrders: Math.max(0, prev.stats.totalOrders - 1),
       },
     }));
   };
@@ -185,6 +233,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout 
               categories={dashboardData.categories}
               isLoading={loadingData}
               onRefresh={loadDashboardData}
+              onCategoryCreated={handleCategoryCreated}
             />
           )}
 
@@ -193,14 +242,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout 
               orders={dashboardData.orders}
               isLoading={loadingData}
               onRefresh={loadDashboardData}
+              onOrderUpdated={handleOrderUpdated}
+              onOrderDeleted={handleOrderDeleted}
             />
           )}
 
-          {activeTab === 'users' && (
+          {(activeTab === 'users' || activeTab === 'admins') && (
             <AdminUsersTab
+              users={dashboardData.users || []}
               admins={dashboardData.admins}
+              activeTab={activeTab === 'admins' ? 'admins' : 'users'}
+              onTabChange={(tab) => setActiveTab(tab)}
               isLoading={loadingData}
               onRefresh={loadDashboardData}
+              onAdminCreated={handleAdminCreated}
             />
           )}
 

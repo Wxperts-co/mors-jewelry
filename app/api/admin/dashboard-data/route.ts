@@ -4,6 +4,7 @@ import { Product } from "@/models/Product";
 import { Category } from "@/models/Category";
 import { Order } from "@/models/Order";
 import { Admin } from "@/models/Admin";
+import { User } from "@/models/User";
 import rawProductsData from "@/data/tbl_new_product.json";
 
 export const dynamic = "force-dynamic";
@@ -58,14 +59,33 @@ export async function GET(req: NextRequest) {
     }
 
     // 2. Query real data from MongoDB Atlas
-    const [products, categories, orders, admins] = await Promise.all([
+    const [products, categories, orders, admins, users] = await Promise.all([
       Product.find().sort({ createdAt: -1, _id: -1 }).lean(),
       Category.find().sort({ name: 1 }).lean(),
       Order.find().sort({ createdAt: -1, _id: -1 }).lean(),
       Admin.find().select("-password").sort({ createdAt: -1, _id: -1 }).lean(),
+      User.find().select("-password").sort({ createdAt: -1, _id: -1 }).lean(),
     ]);
 
     const totalRevenue = orders.reduce((acc, curr) => acc + (curr.totalAmount || 0), 0);
+
+    // Map order counts and spend by customer
+    const customerStats: Record<string, { count: number; total: number }> = {};
+    orders.forEach((o: any) => {
+      const email = (o.customerEmail || "").toLowerCase().trim();
+      const uid = o.userId ? String(o.userId) : "";
+      const amt = Number(o.totalAmount || 0);
+      if (email) {
+        if (!customerStats[email]) customerStats[email] = { count: 0, total: 0 };
+        customerStats[email].count += 1;
+        customerStats[email].total += amt;
+      }
+      if (uid) {
+        if (!customerStats[uid]) customerStats[uid] = { count: 0, total: 0 };
+        customerStats[uid].count += 1;
+        customerStats[uid].total += amt;
+      }
+    });
 
     return NextResponse.json({
       success: true,
@@ -110,13 +130,23 @@ export async function GET(req: NextRequest) {
         })),
         orders: orders.map((o: any) => ({
           id: o.orderNumber || o._id.toString().slice(-6).toUpperCase(),
+          orderNumber: o.orderNumber || o._id.toString().slice(-6).toUpperCase(),
           customer: o.customerName,
           email: o.customerEmail,
-          item: o.item,
-          amount: `$${Number(o.totalAmount).toLocaleString()}`,
-          rawAmount: o.totalAmount,
-          date: new Date(o.createdAt).toLocaleDateString(),
-          status: o.status,
+          phone: o.phone || "",
+          deliveryMethod: o.deliveryMethod || "shipping",
+          shippingAddress: o.shippingAddress || null,
+          items: o.items || [],
+          item: o.item || "Jewelry Item",
+          amount: `$${Number(o.totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          rawAmount: o.totalAmount || 0,
+          subtotal: o.subtotal || 0,
+          shippingCost: o.shippingCost || 0,
+          tax: o.tax || 0,
+          totalAmount: o.totalAmount || 0,
+          date: o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "",
+          status: o.status || "Processing",
+          notes: o.notes || "",
         })),
         admins: admins.map((a: any) => ({
           id: a._id.toString(),
@@ -125,11 +155,30 @@ export async function GET(req: NextRequest) {
           role: a.role || "admin",
           createdAt: new Date(a.createdAt).toLocaleDateString(),
         })),
+        users: users.map((u: any) => {
+          const email = (u.email || "").toLowerCase().trim();
+          const uid = u._id.toString();
+          const stats = customerStats[uid] || customerStats[email] || { count: 0, total: 0 };
+          return {
+            id: uid,
+            _id: uid,
+            name: u.name || "Customer",
+            email: u.email,
+            phone: u.phone || "-",
+            address: u.address || "-",
+            ordersCount: stats.count,
+            totalSpent: stats.total,
+            totalSpentFormatted: `$${Number(stats.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            role: "Customer",
+            createdAt: u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "",
+          };
+        }),
         stats: {
           totalProducts: products.length,
           totalCategories: categories.length,
           totalOrders: orders.length,
           totalAdmins: admins.length,
+          totalUsers: users.length,
           totalRevenue: `$${totalRevenue.toLocaleString()}`,
         },
       },

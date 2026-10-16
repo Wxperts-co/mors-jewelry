@@ -20,6 +20,7 @@ import rawProductsData from '@/data/tbl_new_product.json';
 import { ProductItem } from '@/components/home/ProductSection';
 import { useSiteConfig } from '@/hooks/useSiteConfig';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 
 interface ProductDetailsPageProps {
   productId: string;
@@ -28,8 +29,8 @@ interface ProductDetailsPageProps {
 export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productId }) => {
   const siteConfig = useSiteConfig();
   const { addItem } = useCart();
+  const { isInWishlist, toggleWishlist: contextToggleWishlist } = useWishlist();
   const [selectedQty, setSelectedQty] = useState<number>(1);
-  const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'details' | 'shipping' | 'care'>('details');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [dbProduct, setDbProduct] = useState<ProductItem | null>(null);
@@ -118,9 +119,26 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
     showToast(`Added ${selectedQty} × "${product.title}" to your bag!`);
   };
 
+  const isWishlisted = isInWishlist(product.id);
+
   const toggleWishlist = () => {
-    setIsWishlisted(!isWishlisted);
-    showToast(!isWishlisted ? 'Saved to your Wishlist!' : 'Removed from Wishlist');
+    const isAdded = contextToggleWishlist({
+      id: product.id,
+      title: product.title,
+      price: product.msrp,
+      image: mainImage,
+      category:
+        product.category_id === '1'
+          ? 'Gold'
+          : product.category_id === '2'
+          ? 'Diamond'
+          : product.category_id === '3'
+          ? 'Silver'
+          : undefined,
+      slug: product.slug || product.alias,
+      description: product.description,
+    });
+    showToast(isAdded ? 'Saved to your Wishlist!' : 'Removed from Wishlist');
   };
 
   const handleShare = async () => {
@@ -236,7 +254,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ productI
 
             {/* Stock / Availability Section */}
             <div className="flex items-center gap-2 pt-0.5">
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-wider">
+              <span className="text-xs md:font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-wider">
                 In Stock & Available
               </span>
               <span className="text-xs font-semibold text-neutral-500">

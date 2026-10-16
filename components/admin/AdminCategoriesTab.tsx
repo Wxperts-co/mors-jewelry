@@ -2,24 +2,150 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Tags, X, Pencil, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Tags, X, Pencil, AlertTriangle, Plus, Loader2 } from 'lucide-react';
+import { z } from 'zod';
 import { AdminTable, ColumnDef } from './AdminTable';
 import { TableActionsCell } from './TableActionsCell';
+import { AdminForm, AdminFormField } from './AdminForm';
+
+const categorySchema = z.object({
+  name: z.string().min(2, 'Category name is required'),
+  slug: z.string().optional(),
+  description: z.string().optional(),
+});
+
+type CategoryFormData = z.infer<typeof categorySchema>;
 
 interface AdminCategoriesTabProps {
   categories: any[];
   isLoading: boolean;
   onRefresh: () => void;
+  onCategoryCreated?: (created: any) => void;
 }
 
 export const AdminCategoriesTab: React.FC<AdminCategoriesTabProps> = ({
   categories,
   isLoading,
   onRefresh,
+  onCategoryCreated,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
   const [editingCategory, setEditingCategory] = useState<any | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<any | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Form fields for Add Category using AdminForm
+  const categoryFormFields = useMemo<AdminFormField<CategoryFormData>[]>(
+    () => [
+      {
+        name: 'name',
+        label: 'Collection / Category Name',
+        type: 'text',
+        placeholder: 'e.g. Platinum, Rings, or Gemstones',
+        required: true,
+        colSpan: 2,
+      },
+      {
+        name: 'slug',
+        label: 'Slug (URL Identifier)',
+        type: 'text',
+        placeholder: 'e.g. platinum or gemstones (optional)',
+        description: 'Identifier used in category URLs. Leave blank to auto-generate from the name.',
+        colSpan: 2,
+      },
+      {
+        name: 'description',
+        label: 'Description',
+        type: 'textarea',
+        placeholder: 'Brief description of this jewelry collection...',
+        rows: 3,
+        colSpan: 2,
+      },
+    ],
+    []
+  );
+
+  // Handle Add Category via AdminForm
+  const handleCreateCategory = async (data: CategoryFormData) => {
+    setCreateLoading(true);
+    try {
+      const res = await fetch('/api/admin/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const resJson = await res.json();
+      if (resJson.success) {
+        if (onCategoryCreated) {
+          onCategoryCreated(resJson.category);
+        }
+        onRefresh();
+        setIsAddModalOpen(false);
+      } else {
+        alert(resJson.message || 'Failed to create category');
+      }
+    } catch {
+      alert('Error creating category in database');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  // Handle Edit Category
+  const handleUpdateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCategory) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/categories', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingCategory.id,
+          category_id: editingCategory.category_id,
+          name: editingCategory.name,
+          slug: editingCategory.slug,
+          description: editingCategory.desc,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        onRefresh();
+        setEditingCategory(null);
+      } else {
+        alert(data.message || 'Failed to update category');
+      }
+    } catch {
+      alert('Error updating category in database');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Handle Delete Category
+  const handleConfirmDelete = async () => {
+    if (!deletingCategory) return;
+    setActionLoading(true);
+    try {
+      const queryParam = deletingCategory.id ? `id=${deletingCategory.id}` : `category_id=${deletingCategory.category_id}`;
+      const res = await fetch(`/api/admin/categories?${queryParam}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        onRefresh();
+        setDeletingCategory(null);
+      } else {
+        alert(data.message || 'Failed to delete category');
+      }
+    } catch {
+      alert('Error deleting category from database');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const categoryColumns = useMemo<ColumnDef<any>[]>(
     () => [
@@ -79,13 +205,22 @@ export const AdminCategoriesTab: React.FC<AdminCategoriesTabProps> = ({
         pageSize={10}
         onRowClick={(row) => setSelectedCategory(row)}
         actions={
-          <button
-            onClick={onRefresh}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#FAF9F6] border border-neutral-200 text-xs font-semibold text-neutral-700 hover:bg-white shadow-xs transition-colors cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-neutral-900 hover:bg-[#8F6B1E] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Category</span>
+            </button>
+            <button
+              onClick={onRefresh}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#FAF9F6] border border-neutral-200 text-xs font-semibold text-neutral-700 hover:bg-white shadow-xs transition-colors cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
         }
       />
 
@@ -177,7 +312,7 @@ export const AdminCategoriesTab: React.FC<AdminCategoriesTabProps> = ({
                 </button>
               </div>
 
-              <div className="p-6 space-y-4 text-xs">
+              <form onSubmit={handleUpdateCategory} className="p-6 space-y-4 text-xs">
                 <div>
                   <label className="block text-[11px] font-semibold uppercase text-neutral-600 mb-1">
                     Category Name
@@ -187,6 +322,20 @@ export const AdminCategoriesTab: React.FC<AdminCategoriesTabProps> = ({
                     value={editingCategory.name || ''}
                     onChange={(e) =>
                       setEditingCategory({ ...editingCategory, name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 bg-white border border-neutral-300 rounded-xl text-xs font-medium text-neutral-900 outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase text-neutral-600 mb-1">
+                    Slug (URL Identifier)
+                  </label>
+                  <input
+                    type="text"
+                    value={editingCategory.slug || ''}
+                    onChange={(e) =>
+                      setEditingCategory({ ...editingCategory, slug: e.target.value })
                     }
                     className="w-full px-3 py-2 bg-white border border-neutral-300 rounded-xl text-xs font-medium text-neutral-900 outline-none focus:border-[#D4AF37]"
                   />
@@ -210,22 +359,21 @@ export const AdminCategoriesTab: React.FC<AdminCategoriesTabProps> = ({
                   <button
                     type="button"
                     onClick={() => setEditingCategory(null)}
+                    disabled={actionLoading}
                     className="px-4 py-2 border border-neutral-200 text-neutral-700 rounded-xl text-xs font-semibold hover:bg-neutral-50 transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
-                    type="button"
-                    onClick={() => {
-                      alert('Category updated');
-                      setEditingCategory(null);
-                    }}
-                    className="px-4 py-2 bg-[#8F6B1E] text-white rounded-xl text-xs font-semibold hover:bg-[#785915] transition-colors cursor-pointer"
+                    type="submit"
+                    disabled={actionLoading}
+                    className="px-4 py-2 bg-[#8F6B1E] text-white rounded-xl text-xs font-semibold hover:bg-[#785915] transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
-                    Save Changes
+                    {actionLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>Save Changes</span>
                   </button>
                 </div>
-              </div>
+              </form>
             </motion.div>
           </div>
         )}
@@ -256,20 +404,53 @@ export const AdminCategoriesTab: React.FC<AdminCategoriesTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setDeletingCategory(null)}
+                  disabled={actionLoading}
                   className="px-4 py-2 border border-neutral-200 text-neutral-700 rounded-xl text-xs font-semibold hover:bg-neutral-50 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    alert('Category removed');
-                    setDeletingCategory(null);
-                  }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition-colors cursor-pointer"
+                  onClick={handleConfirmDelete}
+                  disabled={actionLoading}
+                  className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
-                  Confirm Delete
+                  {actionLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>Confirm Delete</span>
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Category Modal using AdminForm */}
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden max-h-[90vh] flex flex-col"
+            >
+              <div className="p-4 sm:p-6 overflow-y-auto">
+                <AdminForm<CategoryFormData>
+                  schema={categorySchema}
+                  fields={categoryFormFields}
+                  defaultValues={{
+                    name: '',
+                    slug: '',
+                    description: '',
+                  }}
+                  onSubmit={handleCreateCategory}
+                  title="Add New Category"
+                  subtitle="Create a new fine jewelry collection in MongoDB database"
+                  submitLabel="Add Category"
+                  cancelLabel="Cancel"
+                  onCancel={() => setIsAddModalOpen(false)}
+                  isLoading={createLoading}
+                />
               </div>
             </motion.div>
           </div>
@@ -278,3 +459,5 @@ export const AdminCategoriesTab: React.FC<AdminCategoriesTabProps> = ({
     </>
   );
 };
+
+export default AdminCategoriesTab;

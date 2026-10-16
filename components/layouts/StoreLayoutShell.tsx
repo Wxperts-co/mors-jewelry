@@ -6,6 +6,7 @@ import { Topbar } from '@/components/layouts/Topbar';
 import { Navbar } from '@/components/layouts/Navbar';
 import { Footer } from '@/components/layouts/Footer';
 import { CartProvider } from '@/context/CartContext';
+import { WishlistProvider } from '@/context/WishlistContext';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 
 export function StoreLayoutShell({ children }: { children: React.ReactNode }) {
@@ -18,11 +19,13 @@ export function StoreLayoutShell({ children }: { children: React.ReactNode }) {
 
   return (
     <CartProvider>
-      <Topbar />
-      <Navbar />
-      <main className="flex-1">{children}</main>
-      <Footer />
-      <CartDrawer />
+      <WishlistProvider>
+        <Topbar />
+        <Navbar />
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <CartDrawer />
+      </WishlistProvider>
     </CartProvider>
   );
 }

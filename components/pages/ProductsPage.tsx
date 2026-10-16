@@ -13,6 +13,7 @@ import {
   Check,
   X,
   ChevronRight,
+  ChevronDown,
   ShieldCheck,
   Truck,
   RotateCcw,
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react';
 import { ProductItem } from '@/components/home/ProductSection';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 
 export interface CategoryTabItem {
   key: string;
@@ -58,11 +60,11 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialCategory }) =
   const [products, setProducts] = useState<ProductItem[]>(cachedProductsByCategory[currentCategory] || []);
   const [isLoading, setIsLoading] = useState<boolean>(!cachedProductsByCategory[currentCategory]);
   const [visibleCount, setVisibleCount] = useState<number>(16);
-  const [wishlist, setWishlist] = useState<Record<string, boolean>>({});
   const [quickViewProduct, setQuickViewProduct] = useState<ProductItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selectedQty, setSelectedQty] = useState<number>(1);
   const { addItem } = useCart();
+  const { isInWishlist, toggleWishlist: contextToggleWishlist } = useWishlist();
 
   // Synchronize activeTab whenever URL or category route changes
   useEffect(() => {
@@ -185,13 +187,27 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialCategory }) =
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const toggleWishlist = (id: string, e: React.MouseEvent) => {
+  const toggleWishlist = (product: ProductItem, e: React.MouseEvent) => {
     e.stopPropagation();
-    setWishlist((prev) => {
-      const isFav = !prev[id];
-      showToast(isFav ? 'Added to your Wishlist' : 'Removed from Wishlist');
-      return { ...prev, [id]: isFav };
+    e.preventDefault();
+    const imgUrl = getProductImage(product, 0);
+    const isAdded = contextToggleWishlist({
+      id: product.id,
+      title: product.title,
+      price: product.msrp,
+      image: imgUrl,
+      category:
+        product.category_id === '1'
+          ? 'Gold'
+          : product.category_id === '2'
+          ? 'Diamond'
+          : product.category_id === '3'
+          ? 'Silver'
+          : undefined,
+      slug: product.slug || product.alias,
+      description: product.description,
     });
+    showToast(isAdded ? `Added "${product.title}" to your Wishlist` : 'Removed from Wishlist');
   };
 
   const handleAddToCart = (product: ProductItem, e?: React.MouseEvent, qty = 1) => {
@@ -276,7 +292,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialCategory }) =
           {/* Heading */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-4xl md:text-4xl font-black tracking-tight text-neutral-900">
+              <h1 className="text-[22px] sm:text-4xl md:text-4xl font-black tracking-tight text-neutral-900">
                 <span className="bg-gradient-to-r from-neutral-950 via-[#78590F] to-neutral-900 bg-clip-text text-transparent">
                   Complete Jewelry Catalog
                 </span>
@@ -297,8 +313,32 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialCategory }) =
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         
-        {/* Category Tabs: All products, Diamond, Gold, Silver */}
-        <div className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 mb-8 overflow-x-auto pb-1">
+        {/* Mobile Category Dropdown (visible only on mobile) */}
+        <div className="block sm:hidden mb-6">
+          <label htmlFor="mobile-category-select" className="block text-[11px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
+            Category
+          </label>
+          <div className="relative inline-block w-auto min-w-[170px] max-w-[210px]">
+            <select
+              id="mobile-category-select"
+              value={activeTab}
+              onChange={(e) => handleTabClick(e.target.value)}
+              className="w-full appearance-none bg-white border border-neutral-200/90 rounded-xl px-3.5 py-2.5 pr-8 text-xs font-bold uppercase tracking-wider text-neutral-900 shadow-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all cursor-pointer"
+            >
+              {tabs.map((tab) => (
+                <option key={tab.key} value={tab.key} className="text-neutral-900 py-1 font-semibold">
+                  {tab.label}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-neutral-500">
+              <ChevronDown className="w-3.5 h-3.5 text-[#8C6210]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Category Tabs: All products, Diamond, Gold, Silver (hidden on mobile) */}
+        <div className="hidden sm:flex items-center justify-start gap-2 sm:gap-3 mb-8 overflow-x-auto pb-1">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.key;
             return (
@@ -339,7 +379,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialCategory }) =
             {displayedProducts.map((product, index) => {
               const imgUrl = getProductImage(product, index);
               const price = parseFloat(product.msrp || '0').toFixed(2);
-              const isWishlisted = !!wishlist[product.id];
+              const isWishlisted = isInWishlist(product.id);
 
               return (
                 <motion.div
@@ -358,17 +398,18 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialCategory }) =
                       {/* Action buttons (Wishlist + Quick View) */}
                       <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-20 flex flex-col gap-1 sm:gap-1.5">
                         <button
-                          onClick={(e) => toggleWishlist(product.id, e)}
+                          type="button"
+                          onClick={(e) => toggleWishlist(product, e)}
                           className={`p-1.5 rounded-full backdrop-blur-md transition-all duration-300 cursor-pointer shadow-xs ${
                             isWishlisted
                               ? 'bg-rose-500 text-white scale-110'
                               : 'bg-white/90 text-neutral-600 hover:text-rose-500 hover:bg-white border border-neutral-200/80'
                           }`}
-                          title="Save to Wishlist"
+                          title={isWishlisted ? "Remove from Wishlist" : "Save to Wishlist"}
                         >
                           <Heart
                             className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${
-                              isWishlisted ? 'fill-current' : ''
+                              isWishlisted ? 'fill-current text-white' : ''
                             }`}
                           />
                         </button>

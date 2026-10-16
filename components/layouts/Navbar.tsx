@@ -1,15 +1,58 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, ShoppingBag, Menu, X } from 'lucide-react';
+import { User, ShoppingBag, Menu, X, Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 
 export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { openCart, totalCount } = useCart();
+  const { totalCount: wishlistCount } = useWishlist();
+  const [user, setUser] = useState<{ name?: string } | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('/api/user/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.success && data.user) {
+            setUser(data.user);
+            return;
+          }
+        }
+        if (isMounted) setUser(null);
+      } catch {
+        if (isMounted) setUser(null);
+      }
+    };
+
+    fetchUser();
+
+    const handleAuthChange = () => {
+      fetchUser();
+    };
+
+    window.addEventListener('user-auth-change', handleAuthChange);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('user-auth-change', handleAuthChange);
+    };
+  }, []);
+
+  const getUserInitials = (name?: string) => {
+    if (!name || !name.trim()) return 'U';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  };
 
   const leftNavLinks = [
     { label: 'HOME', href: '/' },
@@ -105,16 +148,45 @@ export const Navbar = () => {
               ))}
             </nav>
 
-            {/* User & Cart Icons */}
+            {/* User, Wishlist & Cart Icons */}
             <div className="flex items-center space-x-3.5 pl-3 border-l border-neutral-800">
               {/* User Account */}
               <motion.div whileHover={{ scale: 1.12, y: -2 }} whileTap={{ scale: 0.93 }}>
                 <Link
-                  href="#"
-                  aria-label="User Account"
-                  className="group flex items-center justify-center w-10 h-10 rounded-full bg-neutral-900 border border-neutral-700/80 text-neutral-200 hover:text-[#F3D382] hover:border-[#D4AF37] hover:bg-neutral-800 shadow-[0_4px_12px_rgba(0,0,0,0.6)] transition-all"
+                  href="/account"
+                  aria-label={user?.name ? `Account (${user.name})` : 'User Account'}
+                  className="group flex items-center justify-center w-10 h-10 rounded-full bg-neutral-900 border border-neutral-700/80 text-neutral-200 hover:text-[#F3D382] hover:border-[#D4AF37] hover:bg-neutral-800 shadow-[0_4px_12px_rgba(0,0,0,0.6)] transition-all overflow-hidden"
                 >
-                  <User className="w-5 h-5 text-neutral-200 group-hover:text-[#F3D382] transition-colors stroke-[2]" />
+                  {user?.name ? (
+                    <span className="font-bold text-xs tracking-wider text-[#F3D382] group-hover:text-white transition-colors">
+                      {getUserInitials(user.name)}
+                    </span>
+                  ) : (
+                    <User className="w-5 h-5 text-neutral-200 group-hover:text-[#F3D382] transition-colors stroke-[2]" />
+                  )}
+                </Link>
+              </motion.div>
+
+              {/* Wishlist */}
+              <motion.div whileHover={{ scale: 1.12, y: -2 }} whileTap={{ scale: 0.93 }}>
+                <Link
+                  href="/account"
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      sessionStorage.setItem('scroll_to_wishlist', 'true');
+                      const el = document.getElementById('wishlist');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  aria-label={`Wishlist (${wishlistCount} items)`}
+                  className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-neutral-900 border border-neutral-700/80 text-neutral-200 hover:text-rose-400 hover:border-rose-400/70 hover:bg-neutral-800 shadow-[0_4px_12px_rgba(0,0,0,0.6)] transition-all cursor-pointer"
+                >
+                  <Heart className={`w-5 h-5 text-neutral-200 group-hover:text-rose-400 transition-colors stroke-[2] ${wishlistCount > 0 ? 'fill-rose-500 text-rose-500' : ''}`} />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-extrabold text-white bg-rose-600 rounded-full shadow-[0_0_8px_rgba(244,63,94,0.8)]">
+                      {wishlistCount}
+                    </span>
+                  )}
                 </Link>
               </motion.div>
 
@@ -140,11 +212,38 @@ export const Navbar = () => {
           <div className="flex md:hidden items-center space-x-2.5">
             {/* Mobile User Icon */}
             <Link
-              href="#"
-              aria-label="User Account"
-              className="flex items-center justify-center w-9 h-9 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-200 hover:text-[#F3D382] transition-colors"
+              href="/account"
+              aria-label={user?.name ? `Account (${user.name})` : 'User Account'}
+              className="flex items-center justify-center w-9 h-9 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-200 hover:text-[#F3D382] transition-colors overflow-hidden"
             >
-              <User className="w-4.5 h-4.5 text-neutral-200 stroke-[2]" />
+              {user?.name ? (
+                <span className="font-bold text-xs text-[#F3D382]">
+                  {getUserInitials(user.name)}
+                </span>
+              ) : (
+                <User className="w-4.5 h-4.5 text-neutral-200 stroke-[2]" />
+              )}
+            </Link>
+
+            {/* Mobile Wishlist Icon */}
+            <Link
+              href="/account"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  sessionStorage.setItem('scroll_to_wishlist', 'true');
+                  const el = document.getElementById('wishlist');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
+              aria-label={`Wishlist (${wishlistCount} items)`}
+              className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-200 hover:text-rose-400 transition-colors"
+            >
+              <Heart className={`w-4.5 h-4.5 text-neutral-200 stroke-[2] ${wishlistCount > 0 ? 'fill-rose-500 text-rose-500' : ''}`} />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-3.5 h-3.5 px-0.5 text-[9px] font-extrabold text-white bg-rose-600 rounded-full shadow-[0_0_6px_rgba(244,63,94,0.8)]">
+                  {wishlistCount}
+                </span>
+              )}
             </Link>
 
             {/* Mobile Cart Icon */}

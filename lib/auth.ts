@@ -35,3 +35,40 @@ export async function getCurrentAdmin(): Promise<AdminJwtPayload | null> {
     return null;
   }
 }
+
+// ================= CUSTOMER / USER AUTHENTICATION =================
+export const USER_COOKIE_NAME = "user_token";
+
+export interface UserJwtPayload {
+  id: string;
+  email: string;
+  name: string;
+  phone?: string;
+  address?: string;
+}
+
+export function signUserToken(payload: UserJwtPayload): string {
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: "14d",
+  });
+}
+
+export function verifyUserToken(token: string): UserJwtPayload | null {
+  try {
+    return jwt.verify(token, JWT_SECRET) as UserJwtPayload;
+  } catch {
+    return null;
+  }
+}
+
+export async function getCurrentUser(): Promise<UserJwtPayload | null> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(USER_COOKIE_NAME)?.value;
+    if (!token) return null;
+    return verifyUserToken(token);
+  } catch {
+    return null;
+  }
+}
+
